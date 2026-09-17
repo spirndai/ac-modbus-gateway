@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=240, user-scalable=no">
+    <title>风速设置 - {{ ac.id }}空调</title>
+    <style>
+        /* inherit common styles */
+        body {
+            width: 240px;
+            margin: 0;
+            padding: 0px;
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+            background: #f0f0f0;
+        }
+        .detail-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            background: white;
+            padding: 6px 8px;
+            margin-bottom: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .fan-control {
+            background: white;
+            border-radius: 3px;
+            padding: 12px;
+            margin-bottom: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .fan-levels {
+            display: flex;
+            justify-content: space-between;
+            margin: 8px 0;
+        }
+        .fan-btn {
+            flex: 1;
+            margin: 0 2px;
+            padding: 8px;
+            border: none;
+            border-radius: 3px;
+            background: #f0f0f0;
+            color: #666;
+            cursor: pointer;
+        }
+        .fan-btn.active {
+            background: #4a90e2;
+            color: white;
+        }
+		.back-btn {
+            display: block;
+            text-align: center;
+            padding: 12px;
+            background: white;
+            color: #2c3e50;
+            text-decoration: none;
+            border-radius: 3px;
+            margin-top: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        [tabindex]:focus {
+            outline: 2px solid #4a90e2;
+            outline-offset: 2px;
+        }
+    </style>
+</head>
+<body>
+    <div class="detail-header">
+        <h3 style="margin:0; color:#2c3e50; font-size:14px;">风速设置</h3>
+        <span style="color:#666; font-size:11px;">当前风速: {{ ac.fan }}档</span>
+    </div>
+
+    <form method="post" id="myForm">
+        <div class="fan-control">
+            <div class="fan-levels">
+                <button type="button" tabindex="0"  class="fan-btn"
+                        onclick="selectFan('高');">高</button>
+                <button type="button" tabindex="0"  class="fan-btn"
+                        onclick="selectFan('中');">中</button>
+                <button type="button" tabindex="0" class="fan-btn" 
+                        onclick="selectFan('低');">低</button>
+                <button type="button" tabindex="0" class="fan-btn"
+                        onclick="selectFan('自动');">自动</button>
+            </div>
+            <input type="hidden" name="new_fan" id="newFan" value="{{ ac.fan }}">
+            <input type="hidden" name="id" value="{{ ac.dev_address }}">
+        </div>
+    </form>
+
+    <a href="/desc?id={{ ac.dev_address }}" class="back-btn" tabindex="0">← 返回详情</a>
+
+    <script>
+		document.querySelectorAll('button, a').forEach(element => {
+            element.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    element.click();
+                }
+            });
+        });
+
+        function selectFan(level) {
+            document.getElementById('newFan').value = level;
+			const form = document.getElementById('myForm');
+            form.submit();
+        }
+    </script>
+</body>
+</html>

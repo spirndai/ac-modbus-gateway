@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=240, user-scalable=no">
+    <title>关闭水泵 - {{ ac.id }}空调</title>
+    <style>
+        body {
+            width: 240px;
+            margin: 0;
+            padding: 0px;
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+            background: #f0f0f0;
+        }
+        .detail-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            background: white;
+            padding: 6px 8px;
+            margin-bottom: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .form-card {
+            background: white;
+            border-radius: 3px;
+            padding: 8px;
+            margin-bottom: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .submit-btn {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 3px;
+            background: {{ '#e74c3c' if ac.power == '开' else '#27ae60' }};
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .back-btn {
+            display: block;
+            text-align: center;
+            padding: 12px;
+            background: white;
+            color: #2c3e50;
+            text-decoration: none;
+            border-radius: 3px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        button:focus, a:focus {
+            outline: 2px solid #4a90e2;
+            outline-offset: 2px;
+        }
+    </style>
+</head>
+<body>
+    <div class="detail-header">
+        <h3 style="margin:0; color:#2c3e50; font-size:14px;">水泵设置</h3>
+        <span style="color:#666; font-size:11px;">水泵状态: {{ ac.heating}}</span>
+    </div>
+
+	{% if ac.heating=="开" %}
+    <form method="post" action="/edit_heating">
+        <div class="form-card">
+            <input type="hidden" name="id" value="{{ ac.dev_address }}">
+            <button type="submit" class="submit-btn" tabindex="0">关闭水泵
+            </button>
+        </div>
+    </form>
+	{% endif %}
+
+    <a href="/desc?id={{ ac.dev_address }}" class="back-btn" tabindex="0">
+        ← 返回设备详情
+    </a>
+</body>
+</html>

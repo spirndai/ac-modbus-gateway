@@ -1,0 +1,5 @@
+from alpine:3.19
+run apk add py3-psycopg2 py3-crcmod tzdata
+workdir /opt/
+copy svr.py initdb.py send_cmd.py /opt/
+cmd ["python3", "-u", "/opt/svr.py"]

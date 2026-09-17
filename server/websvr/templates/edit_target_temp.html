@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=240, user-scalable=no">
+    <title>温度设置 - {{ ac.id }}空调</title>
+    <style>
+        /* inherit common styles */
+        body {
+            width: 240px;
+            margin: 0;
+            padding: 0px;
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+            background: #f0f0f0;
+        }
+        .detail-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            background: white;
+            padding: 6px 8px;
+            margin-bottom: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .temp-control {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: white;
+            border-radius: 3px;
+            padding: 12px;
+            margin-bottom: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .temp-btn {
+            width: 32px;
+            height: 32px;
+            border: none;
+            border-radius: 16px;
+            background: #4a90e2;
+            color: white;
+            font-size: 16px;
+            line-height: 1;
+            cursor: pointer;
+        }
+        .temp-display {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin: 0 12px;
+        }
+        .submit-btn {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 3px;
+            background: #27ae60;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .back-btn {
+            display: block;
+            text-align: center;
+            padding: 12px;
+            background: white;
+            color: #2c3e50;
+            text-decoration: none;
+            border-radius: 3px;
+            margin-top: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        [tabindex]:focus {
+            outline: 2px solid #4a90e2;
+            outline-offset: 2px;
+        }
+    </style>
+</head>
+<body>
+    <div class="detail-header">
+        <h3 style="margin:0; color:#2c3e50; font-size:14px;">温度设置</h3>
+        <span style="color:#666; font-size:11px;">当前设定温度: {{ "%.1f°C"|format(ac.target_temp) }}</span>
+    </div>
+
+    <form method="post" action="/edit_target_temp">
+        <div class="temp-control">
+            <button type="button" class="temp-btn" tabindex="0" onclick="adjustTemp(-0.5)">-</button>
+            <span class="temp-display" id="targetTemp">{{ "%.1f"|format(ac.target_temp) }}°C</span>
+            <button type="button" class="temp-btn" tabindex="0" onclick="adjustTemp(0.5)">+</button>
+            <input type="hidden" name="new_temp" id="newTemp" value="{{ ac.target_temp }}">
+            <input type="hidden" name="id" value="{{ ac.dev_address }}">
+        </div>
+
+        <button type="submit" class="submit-btn" tabindex="0">确认设置</button>
+    </form>
+
+    <a href="/desc?id={{ ac.dev_address }}" class="back-btn" tabindex="0">← 返回详情</a>
+
+    <script>
+        function adjustTemp(step) {
+            const tempInput = document.getElementById('newTemp');
+            const tempDisplay = document.getElementById('targetTemp');
+            let newTemp = parseFloat(tempInput.value) + step;
+            
+            // temperature range limit (16-30 C)
+            newTemp = Math.max(16, Math.min(30, newTemp));
+            
+            tempInput.value = newTemp.toFixed(1);
+            tempDisplay.textContent = newTemp.toFixed(1) + '°C';
+        }
+
+        // keyboard event handler
+        document.querySelectorAll('button, a').forEach(element => {
+            element.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    element.click();
+                }
+            });
+        });
+    </script>
+</body>
+</html>

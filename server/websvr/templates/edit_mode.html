@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=240, user-scalable=no">
+    <title>模式设置 - {{ ac.id }}空调</title>
+    <style>
+        /* inherit all styles from the detail page */
+        body {
+            width: 240px;
+            margin: 0;
+            padding: 0px;
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+            background: #f0f0f0;
+        }
+        .detail-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            background: white;
+            padding: 6px 8px;
+            margin-bottom: 4px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .status-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: white;
+            border-radius: 3px;
+            padding: 8px;
+            margin-bottom: 4px;
+            transition: all 0.2s;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            cursor: pointer;
+        }
+        .status-label {
+            color: #666;
+            width: 70px;
+        }
+        .status-value {
+            flex-grow: 1;
+            text-align: right;
+            padding-left: 10px;
+        }
+        .indicator {
+            font-size: 16px;
+            margin-left: 5px;
+        }
+        [tabindex]:focus-visible {
+            outline: 2px solid #4a90e2;
+            outline-offset: 2px;
+        }
+		.back-btn {
+            display: block;
+            text-align: center;
+            padding: 12px;
+            background: white;
+            color: #2c3e50;
+            text-decoration: none;
+            border-radius: 3px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        /* mode selector styles */
+        .mode-icon {
+            font-size: 16px;
+            width: 30px;
+            text-align: left;
+        }
+        .mode-status {
+            color: #2c3e50;
+            flex-grow: 1;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+    <div class="detail-header">
+        <h3 style="margin:0; color:#2c3e50; font-size:14px;">{{ ac.id }}空调</h3>
+        <span style="color:#666; font-size:11px; margin-left:8px;">当前模式: {{ ac.mode }}</span>
+    </div>
+
+    <form method="post" id="modeForm">
+        <input type="hidden" name="new_mode" id="newMode" value="{{ ac.mode }}">
+        <input type="hidden" name="id" value="{{ ac.dev_address }}">
+
+        <!-- mode options -->
+        <div class="status-row" tabindex="0" onclick="selectMode('冷风')">
+            <span class="mode-status">冷风模式</span>
+            <span class="indicator">❄️</span>
+        </div>
+
+        <div class="status-row" tabindex="0" onclick="selectMode('热风')">
+            <span class="mode-status">热风模式</span>
+            <span class="indicator">🌞</span>
+        </div>
+
+        <div class="status-row" tabindex="0" onclick="selectMode('换气')">
+            <span class="mode-status">换气模式</span>
+            <span class="indicator">🌀</span>
+        </div>
+
+        <div class="status-row" tabindex="0" onclick="selectMode('地暖')">
+            <span class="mode-status">地暖模式</span>
+            <span class="indicator">♨️</span>
+        </div>
+
+        <div class="status-row" tabindex="0" onclick="selectMode('地暖热风')">
+            <span class="mode-status">地暖热风模式</span>
+            <span class="indicator">🌞♨️</span>
+        </div>
+    </form>
+
+    <!-- back link -->
+    <a href="/desc?id={{ ac.dev_address }}" class="back-btn" tabindex="0">
+        ← 返回详情
+    </a>
+</div>
+
+
+    <script>
+
+		document.querySelectorAll('.status-row, .back-link').forEach(element => {
+        element.addEventListener('keydown', e => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                if (element.classList.contains('back-link')) {
+                    window.location.href = "/desc?id={{ ac.dev_address }}";
+                } else {
+                    element.click();
+                }
+            }
+        });
+    });
+
+        function selectMode(mode) {
+            document.getElementById('newMode').value = mode;
+            document.getElementById('modeForm').submit();
+        }
+    </script>
+</body>
+</html>

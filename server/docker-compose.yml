@@ -1,0 +1,49 @@
+services:
+
+  # Web UI: view AC state, send control commands
+  websvr:
+    build: ./websvr
+    restart: always
+    environment:
+      TZ: Asia/Shanghai
+      POSTGRES_DB: modbusdb
+      POSTGRES_PASSWORD: your_db_password
+      POSTGRES_USER: modbususer
+    ports:
+      - 9950:5000
+    volumes:
+      - "/etc/localtime:/etc/localtime:ro"
+
+  # Main service: receive bus data, parse Modbus frames, store to DB.
+  # Uses host networking so each gateway's UDP source address is preserved
+  # (identified as the device); Docker port mapping can mask it in some setups.
+  svr:
+    build: ./svr
+    restart: always
+    network_mode: host
+    environment:
+      TZ: Asia/Shanghai
+      POSTGRES_DB: modbusdb
+      POSTGRES_PASSWORD: your_db_password
+      POSTGRES_USER: modbususer
+      DB_HOST: 127.0.0.1
+    volumes:
+      - "/etc/localtime:/etc/localtime:ro"
+
+  # Database (you can also point the services above to an existing PostgreSQL)
+  db:
+    image: postgres:16-alpine
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: your_db_password
+      POSTGRES_USER: modbususer
+      POSTGRES_DB: modbusdb
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - 127.0.0.1:5432:5432   # reachable from the host-network svr, not exposed to LAN
+    volumes:
+      - modbus_db_data:/var/lib/postgresql/data
+      - "/etc/localtime:/etc/localtime:ro"
+
+volumes:
+  modbus_db_data:

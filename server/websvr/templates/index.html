@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=240, user-scalable=no">
+    <meta http-equiv="refresh" content="30">
+    <title>空调状态监控</title>
+    <style>
+        body {
+            width: 240px;
+            margin: 0;
+            padding: 0px;
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+            background: #f0f0f0;
+        }
+
+        .ac-row {
+            position: relative;
+            display: flex;
+            align-items: center;
+            /* keep vertically centered */
+            background: white;
+            border-radius: 3px;
+            padding: 1px;
+            padding-left: 80px; /* space for the absolutely positioned elements */
+            margin-bottom: 4px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            min-height: 20px; /* ensure enough height */
+        }
+
+        .ac-row:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px #4a90e2;
+            background: #f0f7ff;
+        }
+
+        .ac-id {
+            position: absolute;
+            left: 0;
+            font-weight: bold;
+            color: #2c3e50;
+            width: 30px;
+            /* fixed width */
+        }
+
+        .ac-power {
+            position: absolute;
+            left: 30px; /* right after the device id */
+            color: white;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-size: 11px;
+            width: 15px;
+            /* fixed width */
+            text-align: center;
+            /* centered text */
+        }
+
+        .ac-mode,
+        .ac-temp {
+            flex-shrink: 0;
+            /* no shrinking */
+        }
+
+        .ac-time {
+            width: 35px;
+            text-align: right;
+            padding: 2px;
+            margin-left: auto;
+            /* time always right-aligned */
+        }
+
+        .power-on {
+            background: #27ae60;
+        }
+
+        .power-off {
+            background: #e74c3c;
+        }
+
+        .ac-mode {
+            flex-shrink: 0;
+            width: 50px;
+            text-align: left;
+            padding: 2px 0;
+            border-radius: 3px;
+            font-size: 16px;
+            cursor: help;
+            /* show tooltip on hover */
+        }
+
+        /* mode icon colors */
+        .mode-冷风 {
+            background: #fff;
+            color: #0066cc;
+        }
+
+        .mode-热风 {
+            background: #fff;
+            color: #ff3300;
+        }
+
+        .mode-换气 {
+            background: #fff;
+            color: #555555;
+        }
+
+        .mode-地暖 {
+            background: #fff;
+            color: #9900cc;
+        }
+
+        .mode-地暖并热风 {
+            background: #fff;
+            color: #cc0066;
+        }
+
+        .ac-temp {
+            flex-shrink: 0;
+            font-weight: bold;
+            width: 80px;
+            text-align: center;
+            font-size: 12px;
+        }
+
+        .heating-icon {
+            position: absolute;
+            left: 62px; /* right after the power badge */
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .heating-on {
+            color: #3498db;
+            /* blue = on */
+        }
+
+        .heating-off {
+            color: #bdc3c7;
+            /* gray = off */
+        }
+    </style>
+</head>
+
+<body>
+    {% for ac in ac_list %}
+    <div class="ac-row" tabindex="0" data-device-id="{{ ac.dev_address }}" data-ac-id="{{ ac.id }}">
+        <span class="ac-id">{{ ac.id }}</span>
+        <span class="ac-power {{ 'power-on' if ac.power == '开' else 'power-off' }}">{{ ac.power }}</span>
+            <span class="heating-icon {{ 'heating-on' if ac.heating == '开' else 'heating-off' }}">
+                {% if ac.heating == '开' %}🚰{% else %}🚱{% endif %}
+            </span>
+        {% if ac.power == '开' %}
+
+        <span class="ac-mode mode-{{ ac.mode }}" title="{{ ac.mode }}">
+            {% if ac.mode == "冷风" %}❄️
+            {% elif ac.mode == "热风" %}🌞
+            {% elif ac.mode == "换气" %}🌀
+            {% elif ac.mode == "地暖" %}♨️
+            {% elif ac.mode == "地暖热风" %}🌞♨️
+            {% endif %}
+        </span>
+        <span class="ac-temp">{{ "%.1f"|format(ac.current_temp) }}° → {{ "%.1f"|format(ac.target_temp) }}°
+        </span>
+        {% else %}
+        <span class="ac-temp">{{ "%.1f"|format(ac.current_temp) }}°
+        </span>
+        {% endif %}
+        <span class="ac-time">{{ ac.insert_time }}</span>
+    </div>
+    {% endfor %}
+    <script>
+        // focus styles and event handling
+        document.addEventListener('DOMContentLoaded', () => {
+            const rows = document.querySelectorAll('.ac-row');
+
+            // highlight on focus
+            rows.forEach(row => {
+                row.addEventListener('focus', () => {
+                    row.style.boxShadow = '0 0 0 2px #4a90e2';
+                    row.style.outline = 'none';
+                });
+                row.addEventListener('keydown', function (event) {
+                    if (event.key === 'Enter') {
+                        const deviceId = this.dataset.deviceId;  // Jinja2 variable via dataset
+                        handleKeyDown(event, deviceId);
+                    }
+                });
+                row.addEventListener('click', function (event) {
+                    const deviceId = this.dataset.deviceId;
+
+                    // check if the heating icon was clicked
+                    if (event.target.classList.contains('heating-icon') ||
+                        (event.target.textContent && (event.target.textContent.includes('🔛') || event.target.textContent.includes('🗷')))) {
+                        window.location.href = `/edit_heating?id=${deviceId}`;
+                    } else {
+                        handleKeyDown(event, deviceId);
+                    }
+                });
+
+                row.addEventListener('blur', () => {
+                    row.style.boxShadow = 'none';
+                });
+            });
+        });
+
+        // keyboard event handler
+        function handleKeyDown(event, deviceId) {
+            event.preventDefault();
+            //    alert(`device ${deviceId} selected, navigating to detail page`);
+            window.location.href = `/desc?id=${deviceId}`;
+        }
+    </script>
+
+</body>
+
+</html>

@@ -1,0 +1,7 @@
+from alpine:3.19
+run apk add py3-psycopg2 py3-crcmod py3-flask py3-gunicorn tzdata
+workdir /opt/
+copy app.py utils.py /opt/
+copy templates /opt/templates/
+copy static /opt/static/
+cmd ["gunicorn", "--bind", "0.0.0.0:5000", "app:app"]

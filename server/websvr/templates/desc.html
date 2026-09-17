@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+	<meta http-equiv="refresh" content="30">
+    <meta name="viewport" content="width=240, user-scalable=no">
+    <title>{{ ac.id }}空调状态</title>
+    <style>
+        body {
+            width: 240px;
+            margin: 0;
+            padding: 0px;
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+            background: #f0f0f0;
+        }
+        .detail-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            background: white;
+            padding: 6px 8px;
+            margin-bottom: 4px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .status-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: white;
+            border-radius: 3px;
+            padding: 8px;
+            margin-bottom: 4px;
+            transition: all 0.2s;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            cursor: pointer;
+        }
+        .status-label {
+            color: #666;
+            width: 70px;
+        }
+        .status-value {
+            flex-grow: 1;
+            text-align: right;
+            padding-left: 10px;
+        }
+        .power-on { color: #27ae60; }
+        .power-off { color: #e74c3c; }
+        .heating-on { color: #e67e22; }
+        .heating-off { color: #95a5a6; }
+        .mode-icon {
+            font-size: 16px;
+            width: 30px;
+            text-align: center;
+        }
+        .indicator {
+            color: #999;
+            margin-left: 5px;
+        }
+        .indicator-placeholder {
+            color: transparent; /* invisible but keeps its space */
+        }
+        /* keyboard focus style */
+        [tabindex]:focus-visible {
+            outline: 2px solid #4a90e2;
+            outline-offset: 2px;
+        }
+		.back-btn {
+            display: block;
+            text-align: center;
+            padding: 12px;
+            background: white;
+            color: #2c3e50;
+            text-decoration: none;
+            border-radius: 3px;
+            margin-top: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+
+ 
+    </style>
+</head>
+<body>
+    <div class="detail-header">
+        <h3 style="margin:0; color:#2c3e50; font-size:14px; white-space: nowrap;">{{ ac.id }}空调</h3>
+        <span style="color:#666; font-size:11px; margin-left:8px;">最后更新时间：{{ ac.insert_time }}</span>
+    </div>
+
+    <!-- power status -->
+    <div class="status-row" tabindex="0" data-status-type="power" role="button">
+        <span class="status-label">电源状态</span>
+        <span class="status-value {{ 'power-on' if ac.power == '开' else 'power-off' }}">
+            {{ ac.power }}
+        </span>
+        <span class="indicator">▶</span>
+    </div>
+
+    {% if ac.power == '开' %}
+    <!-- operation mode -->
+    <div class="status-row" tabindex="0" data-status-type="mode" role="button">
+        <span class="status-label">运行模式</span>
+        <span class="status-value">
+            <span class="mode-icon">
+                {% if ac.mode == "冷风" %}❄️
+                {% elif ac.mode == "热风" %}🌞
+                {% elif ac.mode == "换气" %}🌀
+                {% elif ac.mode == "地暖" %}♨️
+                {% elif ac.mode == "地暖热风" %}🌞♨️
+                {% endif %}
+            </span>
+            {{ ac.mode }}
+        </span>
+        <span class="indicator">▶</span>
+    </div>
+    {% endif %}
+
+    <!-- current temperature -->
+    <div class="status-row" data-status-type="current_temp">
+        <span class="status-label">当前温度</span>
+        <span class="status-value">{{ "%.1f°C"|format(ac.current_temp) }}</span>
+        <span class="indicator indicator-placeholder">▶</span>
+    </div>
+
+    {% if ac.power == '开' %}
+    <!-- target temperature -->
+    <div class="status-row" tabindex="0" data-status-type="target_temp" role="button">
+        <span class="status-label">目标温度</span>
+        <span class="status-value">{{ "%.1f°C"|format(ac.target_temp) }}</span>
+        <span class="indicator">▶</span>
+    </div>
+
+    <!-- fan speed -->
+    <div class="status-row" tabindex="0" data-status-type="fan" role="button">
+        <span class="status-label">风速设置</span>
+        <span class="status-value">{{ ac.fan }}档</span>
+        <span class="indicator">▶</span>
+    </div>
+    {% endif %}
+
+    <!-- water pump status -->
+    <div class="status-row" tabindex="0" data-status-type="heating" role="button">
+        <span class="status-label">水泵状态</span>
+        <span class="status-value {{ 'heating-on' if ac.heating == '开' else 'heating-off' }}">{{ ac.heating }}</span>
+        <span class="indicator">▶</span>
+    </div>
+
+<!-- back link -->
+	<a href="/" class="back-btn" tabindex="0"> ← 返回设备列表 </a>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // handle all interactive elements
+            const interactiveElements = document.querySelectorAll(
+                '.status-row, .back-link'
+            );
+
+            interactiveElements.forEach(element => {
+                // click event
+                element.addEventListener('click', function() {
+                    if (this.classList.contains('back-link')) {
+                        window.location.href = '/';
+                    } else if (this.dataset.statusType!='current_temp'){
+                        const deviceId = "{{ ac.dev_address }}";
+                        const statusType = this.dataset.statusType;
+                        // special-case the heating icon to jump to edit_heating
+                        if (statusType === 'heating') {
+                            window.location.href = `/edit_heating?id=${encodeURIComponent(deviceId)}`;
+                        } else {
+                            window.location.href = `/edit_${statusType}?id=${encodeURIComponent(deviceId)}`;
+                        }
+                    }
+                });
+
+                // keyboard event
+                element.addEventListener('keydown', (event) => {
+                    if (event.key === 'Enter') {
+                        event.preventDefault();
+                        element.click();
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
